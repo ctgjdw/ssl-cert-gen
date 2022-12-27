@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "Generate X509 Certificates for Dev"
 authors = ["CTG"]
 readme = "README.md"
-packages = [{include = "ssl_cert_gen"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -12,7 +11,7 @@ pydantic = "^1.10.2"
 pyopenssl = "^22.1.0"
 
 
-[tool.poetry.group.dev.dependencies]
+[tool.poetry.dev-dependencies]
 pylint = "^2.15.9"
 black = "^22.12.0"
 

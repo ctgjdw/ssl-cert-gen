@@ -55,17 +55,17 @@ class CRT:
         crt.sign(self.ca.p_key, digest_type)
 
     def export_pem(
-        self, key_file_name: str = "crt.key", crt_file_name: str = "crt.pem"
+        self, name: str
     ):
-        with open(crt_file_name, "wt", encoding="utf-8") as crt:
+        with open(f"{name}.pem", "wt", encoding="utf-8") as crt:
             crt.write(dump_certificate(FILETYPE_PEM, self.crt).decode("utf-8"))
-        with open(key_file_name, "wt", encoding="utf-8") as key:
+        with open(f"{name}.key", "wt", encoding="utf-8") as key:
             key.write(dump_privatekey(FILETYPE_PEM, self.p_key).decode("utf-8"))
 
     @classmethod
-    def generate_crt(cls, ca: CA):
+    def generate_crt(cls, ca: CA, name: str):
         crt = cls(ca)
         crt.generate_p_key()
         crt.generate_x509("DNS:nginx")
-        crt.export_pem()
+        crt.export_pem(name)
         return crt
