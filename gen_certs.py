@@ -4,7 +4,7 @@ from ca import CA
 from crt import CRT
 from common import GenRequest
 
-PARSER = ArgumentParser(description="Generate CA/SSL X509 Certificates and Keys from a yaml config file. "
+PARSER = ArgumentParser(description="Generate CA/SSL X509 Certificates and Keys (PEM format) from a yaml config file. "
 "Generates a new CA cert to sign the certificates if a CA cert and key is not provided.")
 PARSER.add_argument("input_file", help="Path to the input file, used to configure and build CA/Keys")
 PARSER.add_argument("-n", "--name", metavar="", help="Name of the output SSL cert files", default="crt")
