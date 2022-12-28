@@ -1,7 +1,6 @@
 from OpenSSL.crypto import (
     PKey,
     X509,
-    TYPE_RSA,
     FILETYPE_PEM,
     dump_certificate,
     dump_privatekey,
@@ -9,7 +8,7 @@ from OpenSSL.crypto import (
     load_privatekey,
 )
 
-from common import CertSub
+from common import CertSub, GenCaRequest
 
 
 class CA:
@@ -22,12 +21,12 @@ class CA:
         self.crt = crt
         self.subject = sub
 
-    def generate_p_key(self, key_type: int = TYPE_RSA, bits: int = 4096) -> PKey:
-        self.p_key.generate_key(key_type, bits)
+    def generate_p_key(self, req: GenCaRequest) -> PKey:
+        self.p_key.generate_key(req.resolved_p_key_type, req.p_key_bits)
         return self.p_key
 
     def generate_cert(
-        self, expiry_years: int = 10, digest_type: str = "sha256"
+        self, req: GenCaRequest
     ) -> X509:
         ca_crt = self.crt
         sub = ca_crt.get_subject()
@@ -39,12 +38,12 @@ class CA:
         sub.OU = self.subject.OU
         sub.CN = self.subject.CN
 
-        ca_crt.set_serial_number(1000)
+        ca_crt.set_serial_number(req.serial_no)
         ca_crt.gmtime_adj_notBefore(0)
-        ca_crt.gmtime_adj_notAfter(expiry_years * 365 * 24 * 60 * 60)
+        ca_crt.gmtime_adj_notAfter(req.expiry_years * 365 * 24 * 60 * 60)
         ca_crt.set_issuer(sub)
         ca_crt.set_pubkey(self.p_key)
-        ca_crt.sign(self.p_key, digest_type)
+        ca_crt.sign(self.p_key, req.signature_alg_type)
         return ca_crt
 
     def export_pem(self, key_file_name: str = "ca.key", crt_file_name: str = "ca.pem"):
@@ -70,9 +69,9 @@ class CA:
         return cls(key, crt)
 
     @classmethod
-    def generate_ca(cls):
-        ca = cls()
-        ca.generate_p_key()
-        ca.generate_cert()
+    def generate_ca(cls, req: GenCaRequest):
+        ca = cls(sub=CertSub.parse_obj(req.subject))
+        ca.generate_p_key(req)
+        ca.generate_cert(req)
         ca.export_pem()
         return ca

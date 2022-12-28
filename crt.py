@@ -8,7 +8,7 @@ from OpenSSL.crypto import (
     dump_privatekey,
 )
 
-from common import CertSub
+from common import CertSub, GenCrtRequest
 
 from ca import CA
 
@@ -25,12 +25,12 @@ class CRT:
         self.crt = crt
         self.subject = sub
 
-    def generate_p_key(self, key_type: int = TYPE_RSA, bits: int = 4096) -> PKey:
-        self.p_key.generate_key(key_type, bits)
+    def generate_p_key(self, req: GenCrtRequest) -> PKey:
+        self.p_key.generate_key(req.resolved_p_key_type, req.p_key_bits)
         return self.p_key
 
     def generate_x509(
-        self, subject_alt_name: str, expiry_years: int = 10, digest_type: str = "sha256"
+        self, req: GenCrtRequest
     ):
         sub = self.crt.get_subject()
         crt = self.crt
@@ -42,17 +42,18 @@ class CRT:
         sub.OU = self.subject.OU
         sub.CN = self.subject.CN
 
-        crt.set_serial_number(1000)
+        crt.set_serial_number(req.serial_no)
         crt.gmtime_adj_notBefore(0)
-        crt.gmtime_adj_notAfter(expiry_years * 365 * 24 * 60 * 60)
+        crt.gmtime_adj_notAfter(req.expiry_years * 365 * 24 * 60 * 60)
         crt.set_issuer(self.ca.crt.get_subject())
         crt.set_pubkey(self.p_key)
 
-        san = X509Extension(b"subjectAltName", False, subject_alt_name.encode("utf-8"))
-        crt.add_extensions([san])
+        if req.extensions and (san_str:=req.extensions.subject_alt_name):
+            san = X509Extension(b"subjectAltName", False, san_str.encode("utf-8"))
+            crt.add_extensions([san])
 
         crt.set_pubkey(self.p_key)
-        crt.sign(self.ca.p_key, digest_type)
+        crt.sign(self.ca.p_key, req.signature_alg_type)
 
     def export_pem(
         self, name: str
@@ -63,9 +64,9 @@ class CRT:
             key.write(dump_privatekey(FILETYPE_PEM, self.p_key).decode("utf-8"))
 
     @classmethod
-    def generate_crt(cls, ca: CA, name: str):
-        crt = cls(ca)
-        crt.generate_p_key()
-        crt.generate_x509("DNS:nginx")
+    def generate_crt(cls, ca: CA, name: str, req: GenCrtRequest):
+        crt = cls(ca, sub=CertSub.parse_obj(req.subject))
+        crt.generate_p_key(req)
+        crt.generate_x509(req)
         crt.export_pem(name)
         return crt

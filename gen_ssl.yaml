@@ -1,0 +1,30 @@
+CA:
+  p_key_alg_type: RSA
+  p_key_bits: 4096
+  p_key_file_extension_type: key
+  serial_no: 1000
+  expiry_years: 10
+  signature_alg_type: sha256
+  subject:
+    CN: "*.dag.op"
+    OU: DAG
+    O: DAG
+    L: SG
+    ST: SG
+    C: SG
+CRT:
+  p_key_alg_type: RSA
+  p_key_bits: 4096
+  p_key_file_extension_type: key
+  serial_no: 1000
+  expiry_years: 10
+  signature_alg_type: sha256
+  subject:
+    CN: "*.dag.op"
+    OU: DAG
+    O: DAG
+    L: SG
+    ST: SG
+    C: SG
+  extensions:
+    subject_alt_name: "DNS:*.iam.dag.op,DNS:*.test.dag.op"
